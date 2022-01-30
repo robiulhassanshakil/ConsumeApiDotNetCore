@@ -12,25 +12,26 @@ namespace Movies.Client.Services
 {
     public class CRUDService : IIntegrationService
     {
-        public static HttpClient _HttpClient = new();
+        public static HttpClient _httpClient = new();
 
         public CRUDService()
         {
-            _HttpClient.BaseAddress = new Uri("http://localhost:57863");
-            _HttpClient.Timeout = new TimeSpan(0, 0, 30);
-            _HttpClient.DefaultRequestHeaders.Clear();
-            /*_HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            _HttpClient.DefaultRequestHeaders.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/xml"));*/
+            _httpClient.BaseAddress = new Uri("http://localhost:57863");
+            _httpClient.Timeout = new TimeSpan(0, 0, 30);
+            _httpClient.DefaultRequestHeaders.Clear();
+            /*_httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            _httpClient.DefaultRequestHeaders.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/xml"));*/
         }
         public async Task Run()
         {
             //await GetResource();
-            await GetResourceThroughHttpRequestMessage();
+            //await GetResourceThroughHttpRequestMessage();
+            await CreateResource();
         }
 
         public async Task GetResource()
         {
-            var response = await _HttpClient.GetAsync("api/movies");
+            var response = await _httpClient.GetAsync("api/movies");
 
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
@@ -51,11 +52,42 @@ namespace Movies.Client.Services
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "api/movies");
             request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
-            var response = await _HttpClient.SendAsync(request);
+
+            var response = await _httpClient.SendAsync(request);
 
             var content = await response.Content.ReadAsStringAsync();
 
             var movies = JsonSerializer.Deserialize<IEnumerable<Movie>>(content);
+        }
+
+        public async Task CreateResource()
+        {
+            var movieToCreate = new MovieForCreation()
+            {
+                Title = "Reservoir Dogs",
+                Description = "After a simple jewelry heist goes terribly wrong, the " +
+                              "surviving criminals begin to suspect that one of them is a police informant.",
+                DirectorId = Guid.Parse("d28888e9-2ba9-473a-a40f-e38cb54f9b35"),
+                ReleaseDate = new DateTimeOffset(new DateTime(1992, 9, 2)),
+                Genre = "Crime, Drama"
+            };
+
+            var serializedMovieToCreate = JsonSerializer.Serialize(movieToCreate);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "api/movies");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            request.Content = new StringContent(serializedMovieToCreate);
+            request.Content.Headers.ContentType.MediaType = "application/json";
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            var movies = JsonSerializer.Deserialize<Movie>(content);
+
+
         }
     }
 }
