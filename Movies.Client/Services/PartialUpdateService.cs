@@ -33,9 +33,9 @@ namespace Movies.Client.Services
             var serializedChangeSet = JsonSerializer.Serialize(patchDoc);
 
             var request = new HttpRequestMessage(HttpMethod.Patch, "api/movies/5b1c2b4d-48c7-402a-80c3-cc796ad49c6b");
-            request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
-            request.Content = new StringContent(serializedChangeSet);
-            request.Content.Headers.ContentType.MediaType = "application/json";
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Content = new StringContent(serializedChangeSet, Encoding.UTF8);
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json-patch+json");
 
 
             var response = await _httpClient.SendAsync(request);
